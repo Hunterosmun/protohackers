@@ -1,0 +1,13 @@
+{
+  "name": "protohackers",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start:server": "node index",
+    "start:ngrok": "npx ngrok tcp 3000",
+    "connect": "nc 127.0.0.1 3000",
+    "dev": "node --watch index.js"
+  }
+}
