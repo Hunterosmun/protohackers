@@ -1,5 +1,7 @@
 import { Server } from 'node:net'
-import handler from './problems/02-meansToAnEnd.js'
+// import handler from './problems/01-primeTime.js'
+// import handler from './problems/02-meansToAnEnd.js'
+import handler from './problems/03-budgetChat.js'
 
 /*
   Problems we're solving are on: https://protohackers.com/problems
