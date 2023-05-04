@@ -1,85 +1,56 @@
-import { Server } from 'node:net'
+import { pipeline } from 'node:stream/promises'
 
-// Problems we're solving are on: https://protohackers.com/problems
-
-/*
-Steps:
-  1: yarn start:server
-  2: yarn start:ngrok
-  3: take the forwarding on that (ie: tcp://2.tcp.ngrok.io:19125)
-  4: nslookup <address> (take address) (ie: nslookup 2.tcp.ngrok.io) (expected: 3.131.207.170)
-  5: Input stuff into the website
-    The IP address is what you got from step 4
-    The port number is what's on the end of step 3
-
-
-  JK we're trying fly? cause ngrok is bad at routing sockets?
-
-  JK that's paid for a good IP or something?
-
-  JK Keith is paying and we're smiling alongside?
-
-  JK Maybe not...?
-
-  K, so it's on fly,
-  IP is 2a09:8280:1::15:490
-  Port is 1024
-*/
-
-const { PORT = '3000' } = process.env
-const port = Number.parseInt(PORT, 10)
-
-const server = new Server(socket => {
-  let buffer = Buffer.from([])
-  socket.on('data', data => {
-    buffer = Buffer.concat([buffer, data])
-    try {
-      let str = buffer.toString('utf-8')
-      while (str.includes('\n')) {
-        // split out the stuff and things
-        const [current, ...other] = str.split('\n')
-        checkIndividual(current, socket)
-        const fullStr = other.join('\n')
-        buffer = Buffer.from(fullStr)
-        str = fullStr
+export default function handler (socket) {
+  const assets = []
+  pipeline(
+    socket,
+    chunk(),
+    map(chunk => {
+      let json
+      try {
+        json = JSON.parse(chunk)
+      } catch (err) {
+        throw new Error('malformed broski')
       }
-    } catch (err) {
-      console.log('CCAAPPPTTAAAIIINNN!!! TELL CASSEY WE HAVE AN ERROÖR!!!', err)
-      // socket.write('CAPTAIN!! WE HAVE AN ERROR!!')
-      socket.write('malformed\n')
+
+      // then check to see if it's an object with the correct properties
+      const num = json?.number
+      if (
+        json?.method !== 'isPrime' ||
+        typeof num !== 'number' ||
+        !isPlainObject(json)
+      ) {
+        console.log({ method: json?.method, num, isPlain: isPlainObject(json) })
+        throw new Error('malformed')
+      }
+
+      // lastly, check if the number is prime
+      const resp = { method: 'isPrime', prime: isPrime(num) }
+      socket.write(JSON.stringify(resp) + '\n')
+    })
+  ).catch(_ => socket.write('malformed\n'))
+}
+
+function chunk () {
+  return async function* (source) {
+    let buffer = Buffer.from([])
+    for await (const chunk of source) {
+      buffer = Buffer.concat([buffer, chunk])
+      // buffer.indexOf(10) is saying take the index of the newline character
+      for (let i = buffer.indexOf(10); i !== -1; i = buffer.indexOf(10)) {
+        yield buffer.subarray(0, i)
+        buffer = buffer.subarray(i + 1)
+      }
     }
-  })
-  socket.on('error', error => console.log('Oopsie whoopsie', error))
-})
-
-server.listen(port).on('listening', () => {
-  console.log(`TCP server listening on port ${port}`)
-})
-
-function checkIndividual (str, socket) {
-  console.log('str is: ', str)
-  let json
-  try {
-    json = JSON.parse(str)
-  } catch (err) {
-    console.log('CÄptain, we have reached errorton', err)
-    throw new Error('malformed broski')
   }
+}
 
-  // then check to see if it's an object with the correct properties
-  const num = json?.number
-  if (
-    json?.method !== 'isPrime' ||
-    typeof num !== 'number' ||
-    !isPlainObject(json)
-  ) {
-    console.log({ method: json?.method, num, isPlain: isPlainObject(json) })
-    throw new Error('malformed')
+function map (mapper) {
+  return async function* (source) {
+    for await (const chunk of source) {
+      yield mapper(chunk)
+    }
   }
-
-  // lastly, check if the number is prime
-  const resp = { method: 'isPrime', prime: isPrime(num) }
-  socket.write(JSON.stringify(resp) + '\n')
 }
 
 function isPlainObject (value) {
@@ -96,12 +67,3 @@ function isPrime (value) {
   }
   return true
 }
-
-/*
-
-{"method":"isPrime","number":1}
-{"method":"isPrime","number":2}  {"method":"isPrime","number":3}
-{"method":"isPrime","number":4}
-{"method":"isPrime","number":5}
-
-*/
