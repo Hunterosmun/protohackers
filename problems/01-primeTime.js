@@ -1,10 +1,11 @@
 import { pipeline } from 'node:stream/promises'
+import { map, split } from '../utils'
 
 export default function handler (socket) {
   const assets = []
   pipeline(
     socket,
-    chunk(),
+    split(10),
     map(chunk => {
       let json
       try {
@@ -29,28 +30,6 @@ export default function handler (socket) {
       socket.write(JSON.stringify(resp) + '\n')
     })
   ).catch(_ => socket.write('malformed\n'))
-}
-
-function chunk () {
-  return async function* (source) {
-    let buffer = Buffer.from([])
-    for await (const chunk of source) {
-      buffer = Buffer.concat([buffer, chunk])
-      // buffer.indexOf(10) is saying take the index of the newline character
-      for (let i = buffer.indexOf(10); i !== -1; i = buffer.indexOf(10)) {
-        yield buffer.subarray(0, i)
-        buffer = buffer.subarray(i + 1)
-      }
-    }
-  }
-}
-
-function map (mapper) {
-  return async function* (source) {
-    for await (const chunk of source) {
-      yield mapper(chunk)
-    }
-  }
 }
 
 function isPlainObject (value) {

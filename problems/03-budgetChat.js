@@ -1,4 +1,5 @@
 import { pipeline } from 'node:stream/promises'
+import { map, split } from '../utils.js'
 
 const NAME_REGEX = /^[a-zA-Z0-9]{1,16}$/
 
@@ -47,29 +48,6 @@ export default function handler (socket) {
         broadcast(socket, `* Y'all gotta bid ${name} farewell :(\n`)
       }
     })
-}
-
-function map (mapper) {
-  return async function* (source) {
-    for await (const chunk of source) {
-      yield mapper(chunk)
-    }
-  }
-}
-
-function split (char) {
-  const code = char.charCodeAt(0)
-  return async function* (source) {
-    let buffer = Buffer.from([])
-    for await (const chunk of source) {
-      buffer = Buffer.concat([buffer, chunk])
-      // buffer.indexOf(10) is saying take the index of the newline character
-      for (let i = buffer.indexOf(code); i !== -1; i = buffer.indexOf(code)) {
-        yield buffer.subarray(0, i)
-        buffer = buffer.subarray(i + 1)
-      }
-    }
-  }
 }
 
 function broadcast (from, message) {

@@ -1,4 +1,5 @@
 import { pipeline } from 'node:stream/promises'
+import { map, chunk } from '../utils'
 
 export default function handler (socket) {
   const assets = []
@@ -33,25 +34,4 @@ export default function handler (socket) {
       }
     })
   ).catch(err => console.error(err))
-}
-
-function chunk (num) {
-  return async function* (source) {
-    let buffer = Buffer.from([])
-    for await (const chunk of source) {
-      buffer = Buffer.concat([buffer, chunk])
-      while (buffer.length >= num) {
-        yield buffer.subarray(0, num)
-        buffer = buffer.subarray(num)
-      }
-    }
-  }
-}
-
-function map (mapper) {
-  return async function* (source) {
-    for await (const chunk of source) {
-      yield mapper(chunk)
-    }
-  }
 }
