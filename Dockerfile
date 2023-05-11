@@ -7,6 +7,7 @@ WORKDIR /app
 
 # Bundle app source
 COPY --chown=node:node package.json index.js ./
+COPY --chown=node:node problems problems
 
 # Exports
 EXPOSE 3000

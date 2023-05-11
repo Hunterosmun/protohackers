@@ -1,5 +1,5 @@
 import { pipeline } from 'node:stream/promises'
-import { map, split } from '../utils.js'
+import { map, split } from './utils.js'
 
 export default function handler (socket) {
   const assets = []
