@@ -2,7 +2,8 @@
 // import handler from './problems/01-primeTime.js'
 // import handler from './problems/02-meansToAnEnd.js'
 // import handler from './problems/03-budgetChat.js'
-import start from './problems/04-unusualDatabaseProblem.js'
+// import start from './problems/04-unusualDatabaseProblem.js'
+import start from './problems/05-mobInTheMiddle.js'
 
 /*
   Problems we're solving are on: https://protohackers.com/problems
@@ -20,6 +21,7 @@ const port = Number.parseInt(PORT, 10)
 //   console.log(`TCP server listening on port ${port}`)
 // })
 
+// This was for problem 4 and on
 await start(port)
 console.log(`server listening on port ${port}`)
 process.once('SIGINT', () => process.exit())
