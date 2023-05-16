@@ -8,6 +8,7 @@ processes = []
 
 [env]
   PORT = "8080"
+  UDP_HOST = "0.0.0.0"
 
 [experimental]
   auto_rollback = true
@@ -17,4 +18,11 @@ processes = []
   protocol = "tcp"
   
   [[services.ports]]
-    port = 1024
+    port = 8080
+
+[[services]]
+  internal_port = 8080
+  protocol = "udp"
+  
+  [[services.ports]]
+    port = 8080
